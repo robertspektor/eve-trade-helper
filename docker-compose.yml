@@ -1,0 +1,40 @@
+version: '3.4'
+
+volumes:
+  evetradehelper_db:
+
+services:
+  evetradehelper_php:
+    build: docker/php
+    image: evetradehelper_php
+    working_dir: /var/www/evetradehelper
+    volumes:
+      - ./:/var/www/evetradehelper:cached
+
+  evetradehelper_nginx:
+    build: docker/nginx
+    image: evetradehelper_nginx
+    volumes:
+      - ./:/var/www/evetradehelper:cached
+    ports:
+      - "8001:80"
+    depends_on:
+      - evetradehelper_db
+      - evetradehelper_php
+
+  evetradehelper_db:
+    build: docker/mysql
+    image: evetradehelper_mysql
+    environment:
+      - MYSQL_DATABASE=evetradehelper
+      - MYSQL_USER=evetradehelper
+      - MYSQL_PASSWORD=m{r+9p)usa.)6ncG
+      - MYSQL_ROOT_PASSWORD=m{r+9p)usa.)6ncG
+    volumes:
+      - evetradehelper_db:/var/lib/mysql
+      - ./docker/mysql/data:/docker-entrypoint-initdb.d
+      - ./:/var/www/evetradehelper
+    ports:
+      - "3333:3306"
+
+
