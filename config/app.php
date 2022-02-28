@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\Facade;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Application Name
@@ -69,7 +70,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Europe/Berlin',
 
     /*
     |--------------------------------------------------------------------------
@@ -137,7 +138,6 @@ return [
     */
 
     'providers' => [
-
         /*
          * Laravel Framework Service Providers...
          */
@@ -176,7 +176,6 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-
     ],
 
     /*
@@ -194,4 +193,5 @@ return [
         // ...
     ])->toArray(),
 
+    'eve_esi_url' => env('EVE_ESI_URL'),
 ];
