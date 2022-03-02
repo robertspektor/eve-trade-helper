@@ -192,6 +192,4 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // ...
     ])->toArray(),
-
-    'eve_esi_url' => env('EVE_ESI_URL'),
 ];

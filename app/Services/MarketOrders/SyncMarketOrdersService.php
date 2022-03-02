@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\MarketOrders;
 
+use App\Jobs\SyncLocations;
 use App\Jobs\SyncMarketOrders;
+use App\Models\Location;
 use App\Models\MarketOrder;
 use App\Models\Region;
 use Carbon\Carbon;
@@ -23,6 +25,10 @@ class SyncMarketOrdersService
 
     public function __construct(private MarketOrderMapper $marketOrderMapper)
     {
+    }
+
+    public function setRegion(Region $region) {
+        $this->region = $region;
     }
 
     public function run(): void
@@ -58,7 +64,7 @@ class SyncMarketOrdersService
 
     private function dispatchJob(int $page): void
     {
-        SyncMarketOrders::dispatch($this->region, $page);
+        SyncMarketOrders::dispatch($this->region, $page)->onQueue('order_sync');
     }
 
     private function saveMarketOrdersByRegion(Collection $orders): void
@@ -66,18 +72,8 @@ class SyncMarketOrdersService
         DB::transaction(function () use ($orders) {
             $orders->each(fn ($order) => $this->marketOrderMapper->map($order, $this->region)->save());
         });
-    }
 
-    private function map(array $order, Region $region): MarketOrder
-    {
-        $marketOrder = MarketOrder::query()->find((int) $order['id']) ?? new MarketOrder();
-        $marketOrder->id = $order['id'];
-
-        $order['region_id'] = $region->id;
-        $order['issued'] = new Carbon($order['issued']);
-        $order['last_seen'] = Carbon::now();
-
-        return new MarketOrder($order);
+        $this->dispatchJobsForMarketLocation();
     }
 
     private function getPages(): int
@@ -89,11 +85,36 @@ class SyncMarketOrdersService
 
     private function getDataForPage(int $page): Response
     {
-        $url = Str::replace('{regionId}', $this->region->id, config('app.eve_esi_url') . $this->url);
+        $url = Str::replace('{regionId}', $this->region->id, config('eve.esi_url') . $this->url);
 
         return Http::get($url, [
             'order_type' => 'all',
             'page' => $page,
         ]);
+    }
+
+    public function dispatchJobsForMarketLocation(): void
+    {
+        $uniqueLocations = MarketOrder::query()->selectRaw('location_id')->where('region_id', $this->region->id)->groupBy('location_id')->get();
+        $uniqueLocations = $uniqueLocations->filter(function ($location) {
+
+            // filter npc stations.
+            if (strlen((string) $location->location_id) !== 8) {
+                return false;
+            }
+
+            // filter already known stations.
+            $existingLocation = Location::query()->find($location->location_id);
+            if (!empty($existingLocation)) {
+                return false;
+            }
+
+            return true;
+        });
+
+        $locationIds = $uniqueLocations->pluck('location_id');
+        if (!empty($locationIds->count())) {
+            SyncLocations::dispatch($locationIds)->onQueue('location_sync');
+        }
     }
 }

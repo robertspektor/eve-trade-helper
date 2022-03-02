@@ -23,7 +23,11 @@ return new class() extends Migration {
             $table->integer('duration');
             $table->boolean('is_buy_order');
             $table->dateTime('issued');
-            $table->bigInteger('location_id');
+
+            $table->foreignId('location_id')->constrained()
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
+
             $table->integer('min_volume');
             $table->bigInteger('order_id');
             $table->double('price');

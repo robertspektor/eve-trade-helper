@@ -8,11 +8,12 @@ command_cs=(PHP_CS_FIXER_IGNORE_ENV=1 vendor/bin/php-cs-fixer fix --allow-risky=
 
 command_stan=(php ./vendor/bin/phpstan analyse --memory-limit=2G)
 
-command_queue_work_local=(DB_HOST=127.0.0.1 DB_PORT=3190 php artisan queue:work)
-command_queue_work=(php artisan queue:work)
+command_queue_work_structure=(php artisan queue:listen --queue=structure_sync)
+command_queue_work_order=(php artisan queue:listen --queue=order_sync)
 
 command_migrate=(php artisan migrate)
-command_migrate_local=(DB_HOST=127.0.0.1 DB_PORT=3190 php artisan migrate)
+
+command_seed=(php artisan db:seed)
 
 command_composer_install=(composer install)
 
@@ -63,11 +64,20 @@ docker-composer-install: docker-up
 docker-migrate:
 	docker-compose exec evetradehelper_php bash -c "$(command_migrate)"
 
+docker-seed:
+	docker-compose exec evetradehelper_php bash -c "$(command_seed)"
+
+docker-import-structure:
+	docker-compose exec evetradehelper_php bash -c "php artisan import:structures"
+
 docker-key:
 	docker-compose exec evetradehelper_php bash -c "$(command_key)"
 
-docker-queue-work:
-	docker-compose exec evetradehelper_php bash -c "$(command_queue_work)"
+docker-queue-work-order:
+	docker-compose exec evetradehelper_php bash -c "$(command_queue_work_order)"
+
+docker-queue-work-structure:
+	docker-compose exec evetradehelper_php bash -c "$(command_queue_work_structure)"
 
 docker-connect:
 	docker-compose exec evetradehelper_php bash
