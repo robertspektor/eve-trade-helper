@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StatusController;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
@@ -16,9 +17,7 @@ Route::middleware([
 
 
 
-Route::get('/', function () {
-    return response()->json(['status' => 'OK', 'timestamp' => Carbon::now()]);
-});
+Route::get('/', [StatusController::class, 'status']);
 
 Route::fallback(function () {
     abort(404, 'API resource not found');

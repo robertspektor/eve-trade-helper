@@ -2,39 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\AuthException;
+use App\Services\Auth\AuthService;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Laravel\Socialite\Facades\Socialite;
-use Symfony\Component\HttpFoundation\RedirectResponse;
+use Illuminate\Routing\Redirector;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
-    /**
-     * Redirect the user to the Eve Online authentication page.
-     *
-     * @return \Illuminate\Http\RedirectResponse|RedirectResponse
-     */
-    public function login(): RedirectResponse|\Illuminate\Http\RedirectResponse
+    public function __construct(private AuthService $authService)
     {
-        return Socialite::driver('eveonline')
-            ->setScopes([
-                'esi-wallet.read_character_wallet.v1',
-                'esi-universe.read_structures.v1',
-                'esi-assets.read_assets.v1',
-            ])
-            ->redirect();
+    }
+
+    public function login(): Redirector|Application|RedirectResponse
+    {
+        return redirect($this->authService->getOAuthLoginUrl());
     }
 
     /**
-     * Obtain the user information from Eve Online.
-     *
-     * @return Response
+     * @throws AuthException
      */
-    public function callback(): Response
+    public function callback(Request $request): Response
     {
-        $user = Socialite::driver('eveonline')->user();
+        $this->authService->authorizeByCode($request);
 
-        dd($user);
+        return response()->json(['status' => 'ok']);
     }
 }

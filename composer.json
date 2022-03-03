@@ -15,9 +15,7 @@
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^9.2",
         "laravel/sanctum": "^2.14.1",
-        "laravel/socialite": "^5.5",
         "laravel/tinker": "^2.7",
-        "nullx27/eveonline-socialite": "dev-php8",
         "symfony/yaml": "^6.0"
     },
     "require-dev": {

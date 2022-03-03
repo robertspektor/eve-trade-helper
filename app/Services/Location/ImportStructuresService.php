@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace App\Services\Location;
 
+use App\Exceptions\AuthException;
 use App\Jobs\SyncStructures;
 use App\Models\Location;
+use App\Services\Auth\AuthService;
 use App\Services\Location\Exceptions\FailedImportStructureException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ImportStructuresService
 {
+    public function __construct(private AuthService $authService)
+    {
+    }
+
     public function dispatchJobs(): void
     {
         $structureIds = $this->getStructureIds();
@@ -29,13 +36,15 @@ class ImportStructuresService
 
     /**
      * @throws FailedImportStructureException
+     * @throws AuthException
      */
     public function updateStructure(int $structureId): void
     {
+        $token = $this->authService->getToken();
         $url = Str::replace('{structureId}', $structureId, config('eve.esi_url') . '/universe/structures/{structureId}');
-        $response = Http::withToken(config('eve.token'))->get($url);
+        $response = Http::withToken($token->getAccessToken())->get($url);
         if ($response->status() !== 200) {
-            throw new FailedImportStructureException();
+            throw new FailedImportStructureException($response->body());
         }
 
         $structure = $response->collect();

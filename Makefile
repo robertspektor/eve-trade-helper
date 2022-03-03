@@ -38,8 +38,11 @@ cs:
 stan:
 	$(command_stan)
 
-queue-work:
-	$(command_queue_work_local)
+queue-work-order:
+	$(command_queue_work_order)
+
+queue-work-structure:
+	$(command_queue_work_structure)
 
 docker-test:
 	docker-compose exec evetradehelper_php bash -c "$(command_test)"
