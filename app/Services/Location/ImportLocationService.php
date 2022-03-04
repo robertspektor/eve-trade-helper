@@ -25,9 +25,6 @@ class ImportLocationService
     {
         Log::debug('ImportLocationService ' . $locationIds->count() . ' location to save');
 
-        // switch between npc stations and
-
-
         DB::transaction(function() use ($locationIds) {
 
             $chunks = $locationIds->chunk(1000);

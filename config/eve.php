@@ -8,6 +8,8 @@ return [
     'client_secret' => env('EVE_CLIENT_SECRET'),
     'redirect' => env('EVE_REDIRECT'),
     'esi_url' => env('EVE_ESI_URL'),
+    'sales_tax' => env('EVE_SALES_TAX'),
+    'broker_fee' => env('EVE_BORKER_FEE'),
     'trade_hubs' => [
         10000002 => 60003760, // JITA
         10000043 => 60008494, // AMARR

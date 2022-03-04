@@ -1,23 +1,18 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Jobs;
 
-use App\Models\Region;
-use App\Services\MarketOrders\ImportMarketOrdersService;
+use App\Services\Type\ImportTypeService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 
-class SyncMarketOrders implements ShouldQueue
+class SyncTypes implements ShouldQueue
 {
-    use Dispatchable;
-    use InteractsWithQueue;
-    use Queueable;
-    use SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
     /**
@@ -30,8 +25,9 @@ class SyncMarketOrders implements ShouldQueue
      *
      * @return void
      */
-    public function __construct(private Region $region, private int $page)
+    public function __construct(private Collection $typeIds)
     {
+        //
     }
 
     /**
@@ -39,8 +35,8 @@ class SyncMarketOrders implements ShouldQueue
      *
      * @return void
      */
-    public function handle(ImportMarketOrdersService $syncMarketOrders)
+    public function handle(ImportTypeService $importTypeService)
     {
-        $syncMarketOrders->import($this->region, $this->page);
+        $importTypeService->updateType($this->typeIds);
     }
 }

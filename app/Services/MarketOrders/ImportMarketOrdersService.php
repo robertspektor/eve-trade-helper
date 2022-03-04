@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-class SyncMarketOrdersService
+class ImportMarketOrdersService
 {
     private Region $region;
 
@@ -48,7 +48,7 @@ class SyncMarketOrdersService
         MarketOrder::query()->where('last_seen', '<', Carbon::now()->subDays(2))->delete();
     }
 
-    public function sync(Region $region, int $page): void
+    public function import(Region $region, int $page): void
     {
         $this->region = $region;
 
@@ -72,8 +72,6 @@ class SyncMarketOrdersService
         DB::transaction(function () use ($orders) {
             $orders->each(fn ($order) => $this->marketOrderMapper->map($order, $this->region)->save());
         });
-
-        $this->dispatchJobsForMarketLocation();
     }
 
     private function getPages(): int
@@ -91,6 +89,18 @@ class SyncMarketOrdersService
             'order_type' => 'all',
             'page' => $page,
         ]);
+    }
+
+    private function dispatchJobsForTypes(): void
+    {
+        $typeIds = MarketOrder::query()
+            ->doesntHave('type')
+            ->get()
+            ->pluck('type_id')
+            ->unique()
+            ->values();
+
+
     }
 
     public function dispatchJobsForMarketLocation(): void

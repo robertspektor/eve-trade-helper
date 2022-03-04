@@ -24,9 +24,7 @@ return new class() extends Migration {
             $table->boolean('is_buy_order');
             $table->dateTime('issued');
 
-            $table->foreignId('location_id')->constrained()
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
+            $table->unsignedBigInteger('location_id');
 
             $table->integer('min_volume');
             $table->bigInteger('order_id');
@@ -38,6 +36,11 @@ return new class() extends Migration {
             $table->integer('volume_total');
 
             $table->timestamps();
+
+            $table->index('location_id');
+            $table->index('is_buy_order');
+            $table->index('system_id');
+            $table->index('type_id');
         });
     }
 

@@ -7,12 +7,12 @@ namespace App\Services\Location;
 use App\Exceptions\AuthException;
 use App\Jobs\SyncStructures;
 use App\Models\Location;
+use App\Models\MarketOrder;
 use App\Services\Auth\AuthService;
 use App\Services\Location\Exceptions\FailedImportStructureException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 
 class ImportStructuresService
 {
@@ -22,16 +22,22 @@ class ImportStructuresService
 
     public function dispatchJobs(): void
     {
-        $structureIds = $this->getStructureIds();
+        $structureIds = $this->getStructureIdsFromApi();
+        $structureIds->merge($this->getStructureIdsFromMarketOrders());
         $structureIds->each(
             fn ($structureId) => SyncStructures::dispatch($structureId)->onQueue('structure_sync')
         );
     }
 
-    private function getStructureIds(): Collection
+    private function getStructureIdsFromApi(): Collection
     {
         $response = Http::get(config('eve.esi_url') . '/universe/structures');
         return $response->collect();
+    }
+
+    private function getStructureIdsFromMarketOrders(): Collection
+    {
+        return MarketOrder::query()->doesntHave('location')->get()->pluck('location_id')->unique()->values();
     }
 
     /**

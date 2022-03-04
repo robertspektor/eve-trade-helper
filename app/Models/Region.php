@@ -14,6 +14,8 @@ class Region extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     /**
      * @return Collection
      */

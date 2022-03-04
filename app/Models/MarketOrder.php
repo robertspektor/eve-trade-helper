@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -33,6 +34,16 @@ class MarketOrder extends Model
     use HasFactory;
     public $guarded = [
     ];
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(Type::class);
+    }
 
     public static function getBestSellPricesByRegionId(int $regionId): Collection
     {
@@ -64,7 +75,7 @@ class MarketOrder extends Model
             ->get();
     }
 
-    public static function getTypeByLocationId($typeId, $locationId): MarketOrder
+    public static function getTypeByLocationId($typeId, $locationId): ?MarketOrder
     {
         return self::query()
             ->selectRaw('type_id, MIN(price) as best_sell_price')

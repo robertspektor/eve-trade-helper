@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Exceptions\AuthException;
+use App\Services\Location\Exceptions\FailedImportStructureException;
 use App\Services\Location\ImportStructuresService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -10,6 +12,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class SyncStructures implements ShouldQueue
 {
@@ -38,6 +41,12 @@ class SyncStructures implements ShouldQueue
      */
     public function handle(ImportStructuresService $importStructuresService)
     {
-        $importStructuresService->updateStructure($this->structureId);
+        try {
+            $importStructuresService->updateStructure($this->structureId);
+        } catch (AuthException $e) {
+            Log::error('AuthException: ' . $e->getMessage());
+        } catch (FailedImportStructureException $e) {
+            Log::error('FailedImportStructureException: ' . $e->getMessage());
+        }
     }
 }
