@@ -68,21 +68,21 @@ class MarketOrder extends Model
     public static function getTypesByLocationId(int $locationId): Collection
     {
         return self::query()
-            ->selectRaw('type_id, MIN(price) as best_sell_price')
+            ->selectRaw('location_id, type_id, MIN(price) as price')
             ->where('is_buy_order', false)
             ->where('location_id', $locationId)
-            ->groupBy('type_id')
+            ->groupBy('type_id', 'location_id')
             ->get();
     }
 
     public static function getTypeByLocationId($typeId, $locationId): ?MarketOrder
     {
         return self::query()
-            ->selectRaw('type_id, MIN(price) as best_sell_price')
+            ->selectRaw('location_id, type_id, MIN(price) as price')
             ->where('is_buy_order', false)
             ->where('location_id', $locationId)
             ->where('type_id', $typeId)
-            ->groupBy('type_id')
+            ->groupBy('type_id', 'location_id')
             ->get()->first();
     }
 }

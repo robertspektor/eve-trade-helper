@@ -16,6 +16,10 @@ class CreateTradeOpportunityService
 {
     private int $countTrades = 0;
 
+    public function __construct(private TradeOpportunityFactory $factory)
+    {
+    }
+
     public function run(): void
     {
         DB::beginTransaction();
@@ -23,21 +27,15 @@ class CreateTradeOpportunityService
 
         Log::info('start analyse trade opportunities');
 
-        $startHubsIds = collect(config('eve.trade_hubs'));
-        $startHubsIds->each(function ($startLocationId) {
+        $hubs = collect(config('eve.trade_hubs'));
+        $matrix = $hubs->crossJoin($hubs)->filter(fn ($item) => $item[0] !== $item[1]);
 
-            $endHubsIds = collect(config('eve.trade_hubs'));
-            $endHubsIds->each(function ($endLocationId) use ($startLocationId) {
+        $matrix->each(function ($item) {
 
-                if ($startLocationId == $endLocationId) {
-                    return;
-                }
-
-                Log::info(sprintf('-> trade route: %s to %s', $startLocationId, $endLocationId));
-
-                $this->analyseLocationToLocation($startLocationId, $endLocationId);
-            });
+            Log::info(sprintf('-> trade route: %s to %s', $item[0], $item[1]));
+            $this->analyseLocationToLocation($item[0], $item[1]);
         });
+
         DB::commit();
     }
 
@@ -52,29 +50,10 @@ class CreateTradeOpportunityService
                 return;
             }
 
-            // calculate tax.
-            $tax = $this->getTax($endHubType->best_sell_price);
-
-            // calculate margin.
-            $margin = $this->calculateMargin(
-                $startHubType->best_sell_price,
-                $endHubType->best_sell_price,
-                $tax
-            );
-
-            if ($margin < 10) {
-                return;
-            }
-
-            $trade = new TradeOpportunity();
-            $trade->type_id = $startHubType->type_id;
-            $trade->start_hub = $startLocationId;
-            $trade->end_hub = $endLocationId;
-            $trade->start_hub_price = $startHubType->best_sell_price;
-            $trade->end_hub_price = $endHubType->best_sell_price;
-            $trade->taxes = $tax;
-            $trade->hub2hub_margin = $margin;
-            $trade->save();
+            $this->factory->fromMarketOrders(
+                $startHubType,
+                $endHubType
+            )?->save();
 
             $this->countTrades++;
 
@@ -90,14 +69,5 @@ class CreateTradeOpportunityService
 
     }
 
-    private function getTax(float $sellPrice): float
-    {
-        return round($sellPrice * (config('eve.broker_fee') + config('eve.sales_tax')) / 100, 2);
-    }
 
-    private function calculateMargin(float $buyPrice, float $sellPrice, float $tax): float
-    {
-        $sellPrice = $sellPrice - $tax;
-        return round(($sellPrice - $buyPrice) / $sellPrice  * 100,2);
-    }
 }

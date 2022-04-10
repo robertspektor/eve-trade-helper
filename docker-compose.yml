@@ -35,6 +35,6 @@ services:
       - ./docker/mysql/data:/docker-entrypoint-initdb.d
       - ./:/var/www/evetradehelper
     ports:
-      - "3333:3306"
+      - "3001:3306"
 
 

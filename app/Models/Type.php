@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property string $name
+ * @property boolean $favorite
  */
 class Type extends Model
 {
